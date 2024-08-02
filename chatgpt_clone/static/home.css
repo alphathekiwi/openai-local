@@ -4,7 +4,7 @@ body {
     display: grid;
     /* place-items: center; */
     grid-template-columns: minmax(auto, 260px) auto;
-    grid-template-rows: auto auto;
+    grid-template-rows: auto 72px;
 }
 textarea {
     border: none;
@@ -20,8 +20,20 @@ textarea {
     grid-row: 1 / span 2;
     place-self: center start;
 }
-#conversation {
+#scrollarea {
     place-self: start center;
+    overflow: hidden;
+    max-height: 100%;
+    display: flex;
+}
+#conversation {
+    overflow: scroll;
+}
+#conversation div[data-role="human"]::before {
+    content: url("icons/human_icon.svg");
+}
+#conversation div[data-role="robot"]::before {
+    content: url("icons/robot_icon.svg");
 }
 #chatbox {
     background-color: #2f2f2f;
@@ -51,7 +63,6 @@ textarea {
     border: 0;
     padding: 0;
 }
-/* view width 760 or less */
 @media (max-width: 760px) {
     #chatbox {
         max-width: 100%;
