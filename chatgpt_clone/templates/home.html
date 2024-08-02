@@ -10,6 +10,7 @@
     <link rel="icon" type="image/png" sizes="16x16" href="https://cdn.oaistatic.com/_next/static/media/favicon-16x16.a052137e.png">
     <link rel="preconnect" href="https://cdn.oaistatic.com/">
     <link rel="prefetch" as="script" crossorigin="anonymous" href="static/simple_gpt.js">
+    <link type="text/css" href="static/home.css" rel="stylesheet" nonce="">
 </head>
 
 <body class="antialiased">
@@ -20,9 +21,10 @@
 
     </div>
     <div id="chatbox">
-        <input type="text">
-        <input type="button" value="Send">
+        <input id="message" type="text">
+        <input type="button" value="Send" onclick="sendMessage()">
     </div>
+    <script src="static/simple_gpt.js"></script>
 </body>
 
 </html>

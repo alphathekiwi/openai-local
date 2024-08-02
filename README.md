@@ -25,5 +25,9 @@ source .venv\scripts\activate
 
 ## INSTALL DEPENDANCIES
 ```bash
-python -m pip install django requests
+python -m pip install django requests channels["daphne"]
+```
+## COllect static files
+```bash
+python manage.py collectstatic --noinput
 ```
