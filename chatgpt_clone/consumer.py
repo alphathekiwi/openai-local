@@ -24,5 +24,10 @@ class ChatConsumer(WebsocketConsumer):
             if chunk.choices[0].delta.content is not None:
                 self.send(text_data=json.dumps({
                     'msg_id': msg_id,
-                    'message': chunk.choices[0].delta.content
+                    'message': chunk.choices[0].delta.content,
+                    'completed': False
+                }))
+        self.send(text_data=json.dumps({
+                    'msg_id': msg_id,
+                    'completed': True
                 }))

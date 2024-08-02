@@ -29,6 +29,11 @@ textarea {
 #conversation {
     overflow: scroll;
 }
+#conversation img {
+    min-width: 100px;
+    max-width: 720px;
+    aspect-ratio: attr(width) / attr(height);
+}
 #conversation div[data-role="human"]::before {
     content: url("icons/human_icon.svg");
 }
@@ -67,4 +72,7 @@ textarea {
     #chatbox {
         max-width: 100%;
     }
+}
+iframe[seamless] {
+    border: none;
 }
