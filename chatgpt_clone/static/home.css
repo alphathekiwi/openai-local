@@ -6,22 +6,50 @@ body {
     grid-template-columns: minmax(auto, 260px) auto;
     grid-template-rows: auto auto;
 }
+textarea {
+    border: none;
+    overflow: auto;
+    outline: none;
+    -webkit-box-shadow: none;
+    -moz-box-shadow: none;
+    box-shadow: none;
+    resize: none;
+}
 #sidebar {
     grid-column: 1;
     grid-row: 1 / span 2;
     place-self: center start;
 }
+#conversation {
+    place-self: start center;
+}
 #chatbox {
+    background-color: #2f2f2f;
     place-self: end center;
     margin: 20px;
     padding: 6px;
     width: 100%;
     max-width: 760px;
+    min-height: 40px;
+    border-radius: 26px;
     display: grid;
     grid-template-columns: 1fr auto;
 }
-#conversation {
-    place-self: start center;
+#chatbox #message {
+    background-color: #2f2f2f;
+    height: 24px;
+    padding: 8px;
+    margin: 0;
+    font-size: 1rem;
+}
+#chatbox #send {
+    align-self: center;
+    background-color: #ffffff;
+    border-radius: 50%;
+    height: 32px;
+    width: 32px;
+    border: 0;
+    padding: 0;
 }
 /* view width 760 or less */
 @media (max-width: 760px) {

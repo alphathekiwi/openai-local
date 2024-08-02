@@ -25,7 +25,7 @@ source .venv\scripts\activate
 
 ## INSTALL DEPENDANCIES
 ```bash
-python -m pip install django requests channels["daphne"]
+python -m pip install django openai requests channels["daphne"]
 ```
 ## COllect static files
 ```bash
