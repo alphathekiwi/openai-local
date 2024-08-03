@@ -8,7 +8,7 @@ chatSocket.onmessage = function(e) {
     const data = JSON.parse(e.data);
     const element = document.querySelector(`[data-msg-id="${data['msg_id']}"]`);
     if (data['completed'] == true) {
-        element.innerHTML = simpleMarkdownParser(element.textContent);
+        element.innerHTML = simpleMarkdownCodeBlocksFirst(element.textContent);
     } else {
         element.textContent += data['message'];
     }
@@ -36,6 +36,46 @@ function createMessageElement(msg_id, message, role='human') {
     element.dataset.msgId = msg_id;
     document.getElementById('conversation').appendChild(element);
 }
+function simpleMarkdownCodeBlocksFirst(text) {
+    let parts = text.split(/```/g);
+    for (let i = 0; i < parts.length; i++) {
+        if (i % 2 == 0) {
+            if (parts.length > 2) {
+                parts[i] = simpleMarkdownInlineCodeNext(parts[i]);
+            }
+        } else {
+            if (/html/.test(parts[i])) {
+                parts[i] = escapeHTML(parts[i]).replace(/^html/i, '<iframe seamless srcdoc="') + '"></iframe>';
+            } else {
+                parts[i] = parts[i].replace(/^(\w\n)?/i, '<code class="code $1">').replace(/\n/g,'<br>') + '</code>';
+            }
+        }
+    }
+    return parts.join('');
+}
+function simpleMarkdownInlineCodeNext(text) {
+    let pattern = /`/g;
+    let indices = [0];
+    while ((match = pattern.exec(text)) != null) {
+        if (indices.length % 2 == 1 && /[^\n\r`]+`/.test(text.substring(match.index, text.length))) {
+            indices.push(match.index); // only add the index if a newline char is not found
+        } else if (indices.length % 2 == 0) {
+            indices.push(match.index + 1); // if the start was added, add the end
+        }
+    }
+    indices.push(text.length);
+    console.log(text);
+    console.log(indices);
+    let newText = '';
+    for (let i = 0; i < indices.length; i+=2) {
+        newText += simpleMarkdownParser(text.substring(indices[i], indices[i+1]));
+        if (i+2 < indices.length) { // there won't be a closing code block
+            newText += '<code class="inline">' + text.substring(indices[i+1], indices[i+2]) + '</code>';
+        }
+    }
+    return newText;
+}
+
 
 function simpleMarkdownParser(text) {
     // I did look for a markdown parser library but ultimately decided
@@ -44,7 +84,7 @@ function simpleMarkdownParser(text) {
     // NOT SUPPORTED: tables, footnotes, emoji, definition lists, heading ids
     //  TODO:  add support for tables
     //  TODO:  add https://highlightjs.org/ for syntax highlighting in code blocks
-	const toHTML = text
+	return text
 		.replace(/^###### (.*)$/gim, '<h4>$1</h6>') // h6 tag
 		.replace(/^##### (.*)$/gim, '<h4>$1</h5>')  // h5 tag
 		.replace(/^#### (.*)$/gim, '<h4>$1</h4>')   // h4 tag
@@ -69,11 +109,11 @@ function simpleMarkdownParser(text) {
 		.replace(/==([^=\n\r]+)==/gim, '<mark>$1</mark>')  // highlighted text
 		.replace(/\^([^\^\n\r]+)\^/gim, '<sup>$1</sup>')   // superscript text
 		.replace(/~([^~\n\r]+)~/gim, '<sub>$1</sub>')      // subscript text
-		.replace(/`([^`\n\r]+)`/gim, '<code class="inline">$1</code>')       // inline code
-        .replace(/```html([^`]+)```/gim, '<iframe seamless>$1</iframe>')     // html block
-        .replace(/```(\w*)([^`]+)```/gim, '<code class="code $1">$2</code>') // code block
         .replace(/!\[([^\]\n\r]+)\]\(([^\)\n\r]+)\)/gim, '<img src="$2" alt="$1"></img>') // images
         .replace(/\[([^\]\n\r]+)\]\(([^\)\n\r]+)\)/gim, '<a href="$2">$1</a>')            // hyperlink
         .replace(/\n$/gim, '<br>'); // line break
-	return toHTML.trim();
+}
+
+function escapeHTML(text) { 
+    return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
