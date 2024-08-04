@@ -5,6 +5,10 @@ body {
     grid-template-columns: minmax(auto, 260px) auto;
     grid-template-rows: auto 72px;
 }
+iframe {
+    width: 100%;
+    aspect-ratio: 16/9;
+}
 textarea {
     border: none;
     overflow: auto;

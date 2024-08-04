@@ -31,7 +31,7 @@ function recieveConversation(data) {
     if (element == null) {
         const convo = document.createElement('div');
         convo.dataset.convoId = convo_id;
-        convo.classList.add('conversation');
+        convo.classList.add('past_convo');
         convo.innerHTML = `<a href="?id=${convo_id}">${title}</a>`;
         document.getElementById('sidebar').appendChild(convo);
     }
