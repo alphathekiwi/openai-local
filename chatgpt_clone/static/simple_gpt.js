@@ -1,10 +1,9 @@
-let current = 0;
+let current = 0, chatSocket = null;
 let socket_url = 'ws://' + window.location.host + '/ws/gpt_local/';
 const url_params = new URLSearchParams(window.location.search);
 if (url_params.has('id')) {
     socket_url += '?id=' + url_params.get('id');
 }
-let chatSocket = new WebSocket(socket_url);
 window.onbeforeunload = function(e) {
     if (chatSocket != null){ chatSocket.close(); }
 };
@@ -15,37 +14,39 @@ chatSocket.onclose = function(e) {
 
 chatSocket.onmessage = function(e) {
     const data = JSON.parse(e.data);
-    console.log(data);
-    let msg_id = data['msg_id'], message = data['message'];
+    const msg_id = data['msg_id'], 
+        message = data['message'], 
+        complete = data['completed'] == true;
     let element = document.querySelector(`[data-msg-id="${data['msg_id']}"]`);
-    // If messages come from the history we need the next message to have a higher id
-    if (msg_id >= current) { current = msg_id + 1; }
-    if (element == null) {
+    if (element == null) { // create a new message element if it doesn't exist
         element = createMessageElement(msg_id);
-        return maybeFormatMessage(element, msg_id, message);
     }
-    if (data['completed'] == true && msg_id % 2 == 1) {
-        maybeFormatMessage(element, msg_id, message);
+    if (msg_id >= current) { // increase the current message id if the message is from the history
+        current = msg_id + 1;
+    }
+    if (msg_id % 2 == 1) { // format the message if it is from the LLM
+        element.innerHTML = simpleMdpCodeBlocks(message);
     } else if (message != undefined && message != '') {
         element.textContent += message;
-    } 
+    }
+    if (complete) { // if the message is the last one, enable the send button
+        document.getElementById('send').disabled = false;
+    }
 };
 
-function maybeFormatMessage(element, msg_id, message) {
-    if (msg_id % 2 == 1) {
-        element.innerHTML = simpleMdpCodeBlocks(message);
-        document.getElementById('send').disabled = false;
-    } 
+function tryConnect() {
+    try {
+        chatSocket = new WebSocket(socket_url);
+    } catch (error) {
+        console.error('Failed to create a new WebSocket connection:', error);
+        return true; // return true to indicate that the connection failed
+    }
 }
 
+tryConnect();
+
 function sendMessage() {
-    if (chatSocket == null) {
-        try {
-            chatSocket = new WebSocket(socket_url);
-        } catch (error) {
-            return console.error('Failed to create a new WebSocket connection:', error);
-        }
-    }
+    if (chatSocket == null && tryConnect()) { return }
     const message = document.getElementById('message').value;
     document.getElementById('send').disabled = true;
     const prompt_msg = createMessageElement(current);
