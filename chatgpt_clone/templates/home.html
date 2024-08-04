@@ -17,7 +17,11 @@
 
 <body class="antialiased">
     <div id="sidebar">
-
+        {% for conversation in conversations %}
+        <div class="conversation">
+            <a href="?id={{ conversation.id }}">{{ conversation.title }}</a>
+        </div>
+        {% endfor %}
     </div>
     <div id="scrollarea">
         <div id="conversation">

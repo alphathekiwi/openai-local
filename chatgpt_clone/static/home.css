@@ -68,6 +68,9 @@ textarea {
     border: 0;
     padding: 0;
 }
+#chatbox #send[disabled] {
+    background-color: #ffeeaa;
+}
 @media (max-width: 760px) {
     #chatbox {
         max-width: 100%;

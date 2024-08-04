@@ -1,13 +1,8 @@
 from django.shortcuts import render
+from chatgpt_clone.models import Conversation, Message
+
 
 # Create your views here.
 def home(request):
-    print(request.build_absolute_uri()) #optional
-    return render(
-        request,
-        'home.html',
-        {
-            'name': "name",
-            'date': "datetime.now()"
-        }
-    )
+    conversations = Conversation.objects.all()
+    return render(request, 'home.html', {'conversations': conversations})

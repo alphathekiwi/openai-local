@@ -1,27 +1,56 @@
 let current = 0;
-const chatSocket = new WebSocket('ws://' + window.location.host + '/ws/gpt_local/');
+let socket_url = 'ws://' + window.location.host + '/ws/gpt_local/';
+const url_params = new URLSearchParams(window.location.search);
+if (url_params.has('id')) {
+    socket_url += '?id=' + url_params.get('id');
+}
+let chatSocket = new WebSocket(socket_url);
 window.onbeforeunload = function(e) {
-    chatSocket.close();
+    if (chatSocket != null){ chatSocket.close(); }
+};
+
+chatSocket.onclose = function(e) {
+    chatSocket = null;
 };
 
 chatSocket.onmessage = function(e) {
     const data = JSON.parse(e.data);
-    const element = document.querySelector(`[data-msg-id="${data['msg_id']}"]`);
-    if (data['completed'] == true) {
-        element.innerHTML = simpleMdpCodeBlocks(element.textContent);
-    } else {
-        element.textContent += data['message'];
+    console.log(data);
+    let msg_id = data['msg_id'], message = data['message'];
+    let element = document.querySelector(`[data-msg-id="${data['msg_id']}"]`);
+    // If messages come from the history we need the next message to have a higher id
+    if (msg_id >= current) { current = msg_id + 1; }
+    if (element == null) {
+        element = createMessageElement(msg_id);
+        return maybeFormatMessage(element, msg_id, message);
     }
+    if (data['completed'] == true && msg_id % 2 == 1) {
+        maybeFormatMessage(element, msg_id, message);
+    } else if (message != undefined && message != '') {
+        element.textContent += message;
+    } 
 };
 
-chatSocket.onclose = function(e) {
-    console.error('Chat socket closed unexpectedly');
-};
+function maybeFormatMessage(element, msg_id, message) {
+    if (msg_id % 2 == 1) {
+        element.innerHTML = simpleMdpCodeBlocks(message);
+        document.getElementById('send').disabled = false;
+    } 
+}
 
 function sendMessage() {
+    if (chatSocket == null) {
+        try {
+            chatSocket = new WebSocket(socket_url);
+        } catch (error) {
+            return console.error('Failed to create a new WebSocket connection:', error);
+        }
+    }
     const message = document.getElementById('message').value;
-    createMessageElement(current, message);
-    createMessageElement(current+1, '', 'robot');
+    document.getElementById('send').disabled = true;
+    const prompt_msg = createMessageElement(current);
+    prompt_msg.textContent = message;
+    createMessageElement(current + 1);
     chatSocket.send(JSON.stringify({
         'msg_id': current + 1,
         'message': message
@@ -29,12 +58,15 @@ function sendMessage() {
     current += 2;
 }
 
-function createMessageElement(msg_id, message, role='human') {
+function createMessageElement(msg_id, role=null) {
+    if (role == null) {
+        if (msg_id % 2 == 0) { role = 'human'; } else { role = 'robot'; }
+    }
     const element = document.createElement('div');
-    element.textContent = message;
     element.dataset.role = role;
     element.dataset.msgId = msg_id;
     document.getElementById('conversation').appendChild(element);
+    return element;
 }
 
 // I did look for a markdown parser library but ultimately decided
@@ -56,10 +88,13 @@ function createMessageElement(msg_id, message, role='human') {
 
 
 function simpleMdpCodeBlocks(text) {
+    // For the code blocks, I took the approach of splitting the text into parts
+    // based on the code block delimiters and since the code block delimiters are always open and close pairs
+    // the even parts will be the non-code block parts and the odd parts will be the code block parts
     let parts = text.split(/```/g);
     for (let i = 0; i < parts.length; i++) {
         if (i % 2 == 0) {
-            if (parts.length > 2) {
+            if (parts[i].length > 2) { // minor bug fixed here
                 parts[i] = simpleMdpInlineCode(simpleMdpFulllineItems(parts[i]));
             }
         } else {
@@ -73,6 +108,9 @@ function simpleMdpCodeBlocks(text) {
     return parts.join('').replace(/([\deilr])>\n+/g, '$1>').replace(/([^>])\n+/g,'$1<br>');
 }
 function simpleMdpInlineCode(text) {
+    // The inline code is a bit more complicated because I need to ensure that they never cross to the next line
+    // As such I need to keep track of the indices of the code block delimiters and only add the code block tags
+    // if the code block is not split by a newline character
     let pattern = /`/g;
     let indices = [0];
     while ((match = pattern.exec(text)) != null) {
@@ -83,8 +121,6 @@ function simpleMdpInlineCode(text) {
         }
     }
     indices.push(text.length);
-    console.log(text);
-    console.log(indices);
     let newText = '';
     for (let i = 0; i < indices.length; i+=2) {
         newText += simpleMdpInlineItems(text.substring(indices[i], indices[i+1]));
