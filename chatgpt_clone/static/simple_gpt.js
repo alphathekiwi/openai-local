@@ -1,18 +1,26 @@
 let current = 0, chatSocket = null;
 let socket_url = 'ws://' + window.location.host + '/ws/gpt_local/';
 const url_params = new URLSearchParams(window.location.search);
-if (url_params.has('id')) {
-    socket_url += '?id=' + url_params.get('id');
+if (url_params.has('id')) { socket_url += '?id=' + url_params.get('id'); }
+window.onbeforeunload = function(e) { if (chatSocket != null) { chatSocket.close(); }};
+
+function tryConnect() {
+    try {
+        chatSocket = new WebSocket(socket_url);
+        chatSocket.onclose = socketOnclose;
+        chatSocket.onmessage = socketOnmessage;
+        return false;
+    } catch (error) {
+        console.error('Failed to create a new WebSocket connection:', error);
+        return true; // return true to indicate that the connection failed
+    }
 }
-window.onbeforeunload = function(e) {
-    if (chatSocket != null){ chatSocket.close(); }
-};
+tryConnect();
 
-chatSocket.onclose = function(e) {
+function socketOnclose(e) {
     chatSocket = null;
-};
-
-chatSocket.onmessage = function(e) {
+}
+function socketOnmessage(e) {
     const data = JSON.parse(e.data);
     const msg_id = data['msg_id'], 
         message = data['message'], 
@@ -32,19 +40,7 @@ chatSocket.onmessage = function(e) {
     if (complete) { // if the message is the last one, enable the send button
         document.getElementById('send').disabled = false;
     }
-};
-
-function tryConnect() {
-    try {
-        chatSocket = new WebSocket(socket_url);
-    } catch (error) {
-        console.error('Failed to create a new WebSocket connection:', error);
-        return true; // return true to indicate that the connection failed
-    }
 }
-
-tryConnect();
-
 function sendMessage() {
     if (chatSocket == null && tryConnect()) { return }
     const message = document.getElementById('message').value;
@@ -58,7 +54,6 @@ function sendMessage() {
     }));
     current += 2;
 }
-
 function createMessageElement(msg_id, role=null) {
     if (role == null) {
         if (msg_id % 2 == 0) { role = 'human'; } else { role = 'robot'; }
