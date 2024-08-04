@@ -17,8 +17,14 @@
 
 <body class="antialiased">
     <div id="sidebar">
+        <a id="newconvo" href="/">
+            <div id="newbutton">
+                <svg width="50" height="50" fill="#2f2f2f" viewBox="0 0 50 50" class="icon-2xl" xmlns="http://www.w3.org/2000/svg"><line fill="none" stroke="#000000" stroke-miterlimit="10" stroke-width="4" x1="9" x2="41" y1="25" y2="25"/><line fill="none" stroke="#000000" stroke-miterlimit="10" stroke-width="4" x1="25" x2="25" y1="9" y2="41"/></svg>
+                <p>NEW CHAT</p>
+            </div>
+        </a>
         {% for conversation in conversations %}
-        <div class="conversation">
+        <div class="past_convo" data-convo-id="{{ conversation.id }}">
             <a href="?id={{ conversation.id }}">{{ conversation.title }}</a>
         </div>
         {% endfor %}

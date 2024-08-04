@@ -22,9 +22,24 @@ function socketOnclose(e) {
 }
 function socketOnmessage(e) {
     const data = JSON.parse(e.data);
+    if ('convo_id' in data) { recieveConversation(data); }
+    else if ('msg_id' in data) { recieveMessage(data); }
+}
+function recieveConversation(data) {
+    const convo_id = data['convo_id'], title = data['title'];
+    const element = document.querySelector('[data-convo-id="' + convo_id + '"]');
+    if (element == null) {
+        const convo = document.createElement('div');
+        convo.dataset.convoId = convo_id;
+        convo.classList.add('conversation');
+        convo.innerHTML = `<a href="?id=${convo_id}">${title}</a>`;
+        document.getElementById('sidebar').appendChild(convo);
+    }
+}
+function recieveMessage(data) {
     const msg_id = data['msg_id'], 
-        message = data['message'], 
-        complete = data['completed'] == true;
+        message = (data['message'] || ''), 
+        complete = (data['completed'] == true);
     let element = document.querySelector(`[data-msg-id="${data['msg_id']}"]`);
     if (element == null) { // create a new message element if it doesn't exist
         element = createMessageElement(msg_id);
@@ -32,8 +47,8 @@ function socketOnmessage(e) {
     if (msg_id >= current) { // increase the current message id if the message is from the history
         current = msg_id + 1;
     }
-    if (msg_id % 2 == 1) { // format the message if it is from the LLM
-        element.innerHTML = simpleMdpCodeBlocks(message);
+    if (msg_id % 2 == 1 && complete) { // format the message if it is from the LLM
+        element.innerHTML = simpleMdpCodeBlocks(element.textContent + message);
     } else if (message != undefined && message != '') {
         element.textContent += message;
     }
@@ -59,6 +74,7 @@ function createMessageElement(msg_id, role=null) {
         if (msg_id % 2 == 0) { role = 'human'; } else { role = 'robot'; }
     }
     const element = document.createElement('div');
+    element.classList.add('chat');
     element.dataset.role = role;
     element.dataset.msgId = msg_id;
     document.getElementById('conversation').appendChild(element);
@@ -97,11 +113,11 @@ function simpleMdpCodeBlocks(text) {
             if (/html/.test(parts[i])) {
                 parts[i] = escapeHTML(parts[i]).replace(/^html/i, '<iframe seamless srcdoc="') + '"></iframe>';
             } else {
-                parts[i] = parts[i].replace(/^(\w\n)?/i, '<code class="code $1">') + '</code>';
+                parts[i] = (parts[i].replace(/^(\w\n)?/i, '<code class="code $1">') + '</code>').replace(/\n/g, '<br>');
             }
         }
     }
-    return parts.join('').replace(/([\deilr])>\n+/g, '$1>').replace(/([^>])\n+/g,'$1<br>');
+    return parts.join('');
 }
 function simpleMdpInlineCode(text) {
     // The inline code is a bit more complicated because I need to ensure that they never cross to the next line
@@ -142,7 +158,8 @@ function simpleMdpFulllineItems(text) {
         .replace(/^ *\- +(.*)$/gm, '<ul><li>$1</li></ul>') // bullet list
         .replace(/li><\/ul>(<br>)?\n?<ul><li/gi, 'li><li') // merge adjacent bullet list items
         .replace(/^ *(\d+)\. (.*)$/gm, '<ol><li value="$1">$2</li></ol>') // numbered list
-        .replace(/li><\/ol>(<br>)?\n?<ol><li/gi, 'li><li');               // merge adjacent numbered list items
+        .replace(/li><\/ol>(<br>)?\n?<ol><li/gi, 'li><li')                // merge adjacent numbered list items
+        .replace(/([\deilr])>\n+/g, '$1>'); // removes newlines after all tags from simpleMdpFulllineItems
 }
 function simpleMdpInlineItems(text) {
     return text.replace(/~~([^~\n\r]+)~~/g, '<s>$1</s>') // strikethrough text
@@ -155,7 +172,8 @@ function simpleMdpInlineItems(text) {
 		.replace(/~([^~\n\r]+)~/g, '<sub>$1</sub>')      // subscript text
         .replace(/!\[([^\]\n\r]+)\]\(([^\)\n\r]+)\)/g, '<img src="$2" alt="$1"></img>') // images
         .replace(/\[([^\]\n\r]+)\]\(([^\)\n\r]+)\)/g, '<a href="$2">$1</a>')            // hyperlink
-        .replace(/([^\("`>]) *?(http(s)?:\/\/.)[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b(?:[-a-zA-Z0-9@:%_\+.~#?&//=]*)/gi, '$1<a href="$2">$2</a>');
+        .replace(/([^\("`>]) *?(http(s)?:\/\/.)[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b(?:[-a-zA-Z0-9@:%_\+.~#?&//=]*)/gi, '$1<a href="$2">$2</a>')
+        .replace(/([^>])\n+/g,'$1<br>');          // replaces all other newlines with <br>
 }
 function escapeHTML(text) { 
     return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");

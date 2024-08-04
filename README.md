@@ -1,3 +1,12 @@
+## ABOUT PROJECT
+The goals of this project were simple
+- Send queries to OpenAI's API
+- Use vanilla JS and HTML for everything on the frontend to keep it simple and readable
+- Parse the markdown response it returned into HTML
+- Store the conversation in a database for later reference
+    *None of the conversation's previous messages are passed to the AI as context*
+    *this is intended and can be verified by asking "What did i ask last?"*
+
 ## SETUP STEPS
 
 ### Linux
@@ -27,7 +36,7 @@ source .venv\scripts\activate
 ```bash
 python -m pip install django openai requests channels["daphne"]
 ```
-## COllect static files
+## Collect static files
 ```bash
 python manage.py collectstatic --noinput
 ```

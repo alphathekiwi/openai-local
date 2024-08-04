@@ -10,6 +10,8 @@ class ChatConsumer(WebsocketConsumer):
         self.client = OpenAI()
         self.conversation = Conversation.from_query_str(str(self.scope['query_string']))
         self.accept()
+        chat_data = {'convo_id': self.conversation.id, 'title': self.conversation.title}
+        self.send(text_data=json.dumps(chat_data))
         if self.conversation.current_message > 0: self.send_history()
 
     def disconnect(self, close_code):

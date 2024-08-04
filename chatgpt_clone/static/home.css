@@ -2,7 +2,6 @@ body {
     margin: 0;
     height: 100vh;
     display: grid;
-    /* place-items: center; */
     grid-template-columns: minmax(auto, 260px) auto;
     grid-template-rows: auto 72px;
 }
@@ -19,6 +18,33 @@ textarea {
     grid-column: 1;
     grid-row: 1 / span 2;
     place-self: center start;
+    background-color: #141419;
+    height: 100%;
+    width: 100%;
+}
+.past_convo {
+    margin: 8px;
+    text-align: center;
+    display: block;
+}
+#newconvo {
+    height: 48px;
+    margin: 16px 32px;
+    display: block;
+}
+#newbutton {
+    width: 100%;
+    height: 100%;
+    color: #000;
+    font-weight: bold;
+    background-color: #6dff70;
+    border-radius: 26px;
+    display: grid;
+    place-items: center;
+    grid-template-columns: 48px auto;
+}
+#newconvo svg {
+    max-width: 32px;
 }
 #scrollarea {
     place-self: start center;
@@ -34,10 +60,13 @@ textarea {
     max-width: 720px;
     aspect-ratio: attr(width) / attr(height);
 }
-#conversation div[data-role="human"]::before {
+.chat {
+    margin: 10px;
+}
+.chat[data-role="human"]::before {
     content: url("icons/human_icon.svg");
 }
-#conversation div[data-role="robot"]::before {
+.chat[data-role="robot"]::before {
     content: url("icons/robot_icon.svg");
 }
 #chatbox {
@@ -52,14 +81,14 @@ textarea {
     display: grid;
     grid-template-columns: 1fr auto;
 }
-#chatbox #message {
+#message {
     background-color: #2f2f2f;
     height: 24px;
     padding: 8px;
     margin: 0;
     font-size: 1rem;
 }
-#chatbox #send {
+#send {
     align-self: center;
     background-color: #ffffff;
     border-radius: 50%;
@@ -68,8 +97,11 @@ textarea {
     border: 0;
     padding: 0;
 }
-#chatbox #send[disabled] {
+#send[disabled] {
     background-color: #ffeeaa;
+}
+.code, .inline {
+    background-color: #141419;
 }
 @media (max-width: 760px) {
     #chatbox {
